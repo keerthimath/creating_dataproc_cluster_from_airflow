@@ -1,42 +1,27 @@
-            - name: Deploy Apache Airflow DAGs to Astro
-  # You may pin to the exact commit or the version.
-  # uses: astronomer/deploy-action@02a8f0f508d1334638d3d90986c8b1f4d9100b3f
-  uses: astronomer/deploy-action@v0.4
-  with:
-    # Path to the Astro project folder that contains the 'dags' folder.
-    root-folder: # optional, default is ./
-    # If true DAGs will be parsed before deploying to Astro.
-    parse: # optional
-    # if true custom pytests will be ran before deploying to Astro.
-    pytest: # optional
-    # Specify custom pytest files to run with the pytest command.
-    pytest-file: # optional, default is tests/
-    # If true your code will be force deployed to Astronomer. Mostly used to skip parse test on image deploys.
-    force: # optional
-    # Specify a custom built image to deploy to an Asto Deployment.
-    image-name: # optional, default is no-custom-image
-    # Specify what action you would like to take. Use this option to create or delete deployment previews. Specify either 'create-deployment-preview', 'delete-deployment-preview' or 'deploy-deployment-preview'. Don't specify anything if you are deploying to a regular Deployment.
-    action: # optional, default is deploy
-    # The name of the Deployment you want to make preview from or are deploying to.
-    deployment-name: # optional
-    # The id of the Deployment you to make a preview from or are deploying to.
-    deployment-id: # optional
-    # Workspace id to select. Only required when `ASTRO_API_TOKEN` is given an organization token.
-    workspace: # optional
-    # Custom preview name. By default this is <branch-name>_<deployment-name>.
-    preview-name: # optional
-    # Copy connections from the original Deployment to the new deployment preview.
-    copy-connections: # optional, default is true
-    # Copy Airflow variables from the original Deployment to the new deployment preview.
-    copy-airflow-variables: # optional, default is true
-    # Copy pools from the original Deployment to the new deployment preview.
-    copy-pools: # optional, default is true
-    # The desired Astro CLI version to use
-    cli-version: # optional, default is 
-    # Whether to checkout the repo as the first step. Set this to false if you want to modify repo contents before invoking the action
-    checkout: # optional, default is true
-    # A description to set for deploying to Astro. This is equivalent to running `astro deploy --description "..."` with the Astro CLI. The description is visible in the Deploy History tab in your Astro Deployment, and can be helpful to explain what triggered a deploy.
-For example, to display the most recent commit that resulted in an Astro deploy, you could configure `description: "Deployed from commit ..."` with the value of `github.event.after`. This would display e.g. "Deployed from commit da39a3ee5e6b4b0d3255bfef95601890afd80709". Reference: https://docs.github.com/en/webhooks/webhook-events-and-payloads#push.
+name: Astronomer CI - Deploy code
 
-    description: # optional
-          
+on:
+  workflow_dispatch:
+    inputs:
+      deploymentId:
+        description: "Deployment ID"
+        required: true
+        type: string
+      apiToken:
+        description: "Astro API Token"
+        required: true
+        type: string
+  push:
+    branches:
+      - main
+
+env:
+  ASTRO_API_TOKEN: ${{ inputs.apiToken || secrets.ASTRO_API_TOKEN }}
+  DEPLOYMENT_ID: ${{ inputs.deploymentId || vars.DEPLOYMENT_ID }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Deploy to Astro
+      uses: astronomer/deploy-action@v0.2
